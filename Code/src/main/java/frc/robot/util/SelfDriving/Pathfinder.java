@@ -35,7 +35,7 @@ public class Pathfinder extends SubsystemBase {
     // Create the constraints to use while pathfinding. The constraints defined in
     // the path will only be used for the path.
     static PathConstraints constraints = new PathConstraints(
-            3.0, 4.0,
+            3.0, 2.0,
             Units.degreesToRadians(540), Units.degreesToRadians(720));
 
     public static Command moveToPose(Pose2d targetPose, double endVelocity) {

@@ -88,7 +88,7 @@ import edu.wpi.first.units.measure.*;
 
      public static final double maxSpeed = 5.0;//In meter/Second  //Hypathetically 5.21208
      public static final double maxAngularVelocity = maxSpeed/robotRotationFactor; //meter/sec to radian/sec
-     public static final double maxAcceleration = 6.0;//Hypethicaly 6.2// Motor_MAX_Tork/(robotMass*Math.pow(centerofGravity,2.0))
+     public static final double maxAcceleration = 3.5;//Hypethicaly 6.2// Motor_MAX_Tork/(robotMass*Math.pow(centerofGravity,2.0))
      
      
     /*Motor Constaints */
@@ -322,24 +322,24 @@ import edu.wpi.first.units.measure.*;
     //     new Rotation3d(0.0, Units.degreesToRadians(0.0), Units.degreesToRadians(45)));
     
     //These are updated camera positions for 2025
-    public static final Transform3d APRILTAG_CAMERA_TO_ROBOT_1 = new Transform3d(  
-      new Translation3d(Units.inchesToMeters(-13.220), Units.inchesToMeters(7.335), Units.inchesToMeters(5.915)), // Get from CAD Model In meters-0.063, -0.3125, 0.562
-      new Rotation3d(0.0, Units.degreesToRadians(35), Units.degreesToRadians(-120)));
+    public static final Transform3d ROBOT_TO_APRILTAG_CAMERA1 = new Transform3d(  
+      new Translation3d(Units.inchesToMeters(-7.335), Units.inchesToMeters(13.220), Units.inchesToMeters(5.915)), // Get from CAD Model In meters -13.220
+      new Rotation3d(0.0, Units.degreesToRadians(-35), Units.degreesToRadians(60)));
 
 
-  public static final Transform3d APRILTAG_CAMERA_TO_ROBOT_2 = new Transform3d(
+  public static final Transform3d ROBOT_TO_APRILTAG_CAMERA2 = new Transform3d(
       new Translation3d(Units.inchesToMeters(-13.220), Units.inchesToMeters(7.335), Units.inchesToMeters(5.915)),//0.063, -0.3125, 0.562
-      new Rotation3d(0.0, Units.degreesToRadians(35), Units.degreesToRadians(60)));
+      new Rotation3d(0.0, Units.degreesToRadians(-35), Units.degreesToRadians(-150)));
 
 
-  public static final Transform3d APRILTAG_CAMERA_TO_ROBOT_3 = new Transform3d(
+  public static final Transform3d ROBOT_TO_APRILTAG_CAMERA3 = new Transform3d(
       new Translation3d(Units.inchesToMeters(13.220), Units.inchesToMeters(-7.335), Units.inchesToMeters(5.915)),//0.063, 0.3125, 0.562
-      new Rotation3d(0.0, Units.degreesToRadians(35), Units.degreesToRadians(30)));
+      new Rotation3d(0.0, Units.degreesToRadians(-35), Units.degreesToRadians(30)));
 
 
-  public static final Transform3d APRILTAG_CAMERA_TO_ROBOT_4 = new Transform3d(
-      new Translation3d(Units.inchesToMeters(-13.220), Units.inchesToMeters(-7.335), Units.inchesToMeters(5.915)),//-0.063, 0.3125, 0.562
-      new Rotation3d(0.0, Units.degreesToRadians(35), Units.degreesToRadians(60)));//-225
+  public static final Transform3d ROBOT_TO_APRILTAG_CAMERA4 = new Transform3d(
+      new Translation3d(Units.inchesToMeters(-7.335), Units.inchesToMeters(-13.220), Units.inchesToMeters(5.915)),//-0.063, 0.3125, 0.562
+      new Rotation3d(0.0, Units.degreesToRadians(-35), Units.degreesToRadians(-60)));//-225
 
     //Lime Light 
     //          CAD             RealLife   OldVaules 
@@ -639,4 +639,5 @@ import edu.wpi.first.units.measure.*;
     int pneumatic_Channel_On = 0;//The ID of which channel the wire are in on the PDH for on
     int pneumatic_Channel_Off = 0;//The ID of which channel the wire are in on the PDH for off
     }
-}
+
+  }

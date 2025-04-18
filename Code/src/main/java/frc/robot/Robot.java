@@ -17,6 +17,7 @@ public class Robot extends TimedRobot {
 
   public Robot() {
     m_robotContainer = new RobotContainer();
+    
 
     //This will build and auto in the start to make pathplanner run faster
     // DO THIS AFTER CONFIGURATION OF YOUR DESIRED PATHFINDER
@@ -26,6 +27,8 @@ public class Robot extends TimedRobot {
   @Override
   public void robotPeriodic() {
     CommandScheduler.getInstance().run(); 
+
+    RobotContainer.m_aprilTags.updatedPoseFromTagTeleOp();
   }
 
   @Override

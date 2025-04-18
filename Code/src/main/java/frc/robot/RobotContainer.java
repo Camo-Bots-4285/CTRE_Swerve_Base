@@ -59,7 +59,8 @@ import frc.robot.commands.Swerve.ToPose;
 import frc.robot.subsystems.SwerveBase.CommandSwerveDrivetrain;
  import frc.robot.subsystems.SwerveBase.Telemetry;
  import frc.robot.subsystems.SwerveBase.TunerConstants;
- import frc.robot.util.SelfDriving.Pathfinder;
+import frc.robot.subsystems.Vision.AprilTagSubsystem;
+import frc.robot.util.SelfDriving.Pathfinder;
 
  
  public class RobotContainer {
@@ -73,7 +74,7 @@ import frc.robot.subsystems.SwerveBase.CommandSwerveDrivetrain;
              //.withSteerRequestType(SteerRequestType.MotionMagicExpo);
  
      public final SwerveRequest.RobotCentric Robot_Centric_Driving = new SwerveRequest.RobotCentric()
-             .withDeadband(MaxSpeed * 0.2).withRotationalDeadband(MaxAngularRate * 0.1)
+             //.withDeadband(MaxSpeed * 0.2).withRotationalDeadband(MaxAngularRate * 0.1)
              .withSteerRequestType(SteerRequestType.MotionMagicExpo);
      
      private final SwerveRequest.SwerveDriveBrake brake = new SwerveRequest.SwerveDriveBrake(); 
@@ -88,16 +89,38 @@ import frc.robot.subsystems.SwerveBase.CommandSwerveDrivetrain;
      public final static Joystick driverJoystick = new Joystick(0);
 
      public static Pathfinder m_pathFinder  = new Pathfinder(drivetrain);
-
-     
+     public static AprilTagSubsystem m_aprilTags  = new AprilTagSubsystem();
+/*PID auto tune stuff-
+ * 
+ * Run one of the sysID command 
+ * Open the log file using this guide-https://v6.docs.ctr-electronics.com/en/latest/docs/tuner/tools/log-extractor.html
+ * 
+ */
+public boolean bob = true;
         
      public RobotContainer() {
          //Change this method to try diffent swerve contorl
          //configureBindings_JoyStick_with_TeleOpSwerve();
 
-         JoystickButton btn_run_motor = new JoystickButton(driverJoystick, 1);
-         //btn_run_motor.whileTrue(new ToPath("Example Path"));drivetrain.sysIdDynamic(Direction.kForward)
-         btn_run_motor.whileTrue(drivetrain.sysIdDynamic(Direction.kForward));
+        //  JoystickButton btn_run_motor1 = new JoystickButton(driverJoystick, 3);
+        //  btn_run_motor1.whileTrue(drivetrain.sysIdQuasistatic(Direction.kForward));
+        // JoystickButton btn_run_motor1 = new JoystickButton(driverJoystick, 1);
+        //   btn_run_motor1.whileTrue(new ToPath("Example Path"));
+
+          JoystickButton btn_run_motor1 = new JoystickButton(driverJoystick, 7);
+          btn_run_motor1.whileTrue(drivetrain.runOnce(() -> drivetrain.seedFieldCentric()));
+
+
+         
+        //  JoystickButton btn_run_motor2 = new JoystickButton(driverJoystick, 4);
+        //  btn_run_motor2.whileTrue(drivetrain.sysIdQuasistatic(Direction.kReverse));
+            
+        //  JoystickButton btn_run_motor3 = new JoystickButton(driverJoystick, 5);
+        //  btn_run_motor3.whileTrue(drivetrain.sysIdDynamic(Direction.kForward));
+
+        //  JoystickButton btn_run_motor4 = new JoystickButton(driverJoystick, 6);
+        //  btn_run_motor4.whileTrue(drivetrain.sysIdDynamic(Direction.kReverse));
+            
             
 
  
@@ -115,14 +138,33 @@ import frc.robot.subsystems.SwerveBase.CommandSwerveDrivetrain;
        () -> !driverJoystick.getRawButton(1)// inverted=fieldCentric, non-inverted=RobotCentric
         );
 
+        JoystickButton btn_run_motor = new JoystickButton(driverJoystick, 1);
+
+
+
         drivetrain.setDefaultCommand(
             // Drivetrain will execute this command periodically
             drivetrain.applyRequest(() ->
             Feild_Centric_Driving.withVelocityX(-TeleOpSwerve.getControl()[0] * (MaxSpeed)) // Drive forward with negative Y (forward)
                     .withVelocityY(-TeleOpSwerve.getControl()[1]* (MaxSpeed)) // Drive left with negative X (left)
                     .withRotationalRate(TeleOpSwerve.getControl()[2] * (MaxAngularRate)) // Drive counterclockwise with negative X (left)
-            ).unless(btn_run_motor)
+            )
         );
+
+    // drivetrain.setDefaultCommand(
+    //     // Drivetrain will execute this command periodically
+    //     drivetrain.applyRequest(() ->
+    //     Robot_Centric_Driving.withVelocityX(-TeleOpSwerve.getControl()[0] * (MaxSpeed)) // Drive forward with negative Y (forward)
+    //             .withVelocityY(-TeleOpSwerve.getControl()[1]* (MaxSpeed)) // Drive left with negative X (left)
+    //             .withRotationalRate(TeleOpSwerve.getControl()[2] * (MaxAngularRate)) // Drive counterclockwise with negative X (left)
+    //     )
+    // );
+
+        // drivetrain.applyRequest(() ->
+        //      Feild_Centric_Driving.withVelocityX(-TeleOpSwerve.getControl()[0] * (MaxSpeed)) // Drive forward with negative Y (forward)
+        //              .withVelocityY(-TeleOpSwerve.getControl()[1]* (MaxSpeed)) // Drive left with negative X (left)
+        //              .withRotationalRate(TeleOpSwerve.getControl()[2] * (MaxAngularRate)) // Drive counterclockwise with negative X (left)
+        //      )
      
         
         NamedCommands.registerCommand("PathEnd", new RunCommand(()-> Pathfinder.PathEnded = true));
@@ -199,5 +241,14 @@ import frc.robot.subsystems.SwerveBase.CommandSwerveDrivetrain;
  
      public Command getAutonomousCommand() {
              return AutoBuilder.buildAuto("New Auto");
+     }
+
+
+     public static Command runRobot(){
+       return drivetrain.applyRequest(() ->
+        Feild_Centric_Driving.withVelocityX(-TeleOpSwerve.getControl()[0] * (MaxSpeed)) // Drive forward with negative Y (forward)
+                .withVelocityY(-TeleOpSwerve.getControl()[1]* (MaxSpeed)) // Drive left with negative X (left)
+                .withRotationalRate(TeleOpSwerve.getControl()[2] * (MaxAngularRate)) // Drive counterclockwise with negative X (left)
+        );
      }
  }

@@ -39,12 +39,14 @@ public class ToPose extends Command {
   @Override
   public void initialize() {
     m_autonomousCommand= Pathfinder.moveToPose(POSE,0);
-    m_autonomousCommand.schedule();
+    
   }
 
   // Called every time the scheduler runs while the command is scheduled.
   @Override
-  public void execute() {}
+  public void execute() {
+    m_autonomousCommand.schedule();
+  }
 
   // Called once the command ends or is interrupted.
   @Override
