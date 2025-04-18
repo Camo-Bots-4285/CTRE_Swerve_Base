@@ -96,7 +96,6 @@ import frc.robot.util.SelfDriving.Pathfinder;
  * Open the log file using this guide-https://v6.docs.ctr-electronics.com/en/latest/docs/tuner/tools/log-extractor.html
  * 
  */
-public boolean bob = true;
         
      public RobotContainer() {
          //Change this method to try diffent swerve contorl
