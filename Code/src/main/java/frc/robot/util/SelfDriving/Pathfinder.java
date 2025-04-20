@@ -24,11 +24,11 @@ public class Pathfinder extends SubsystemBase {
     // Defines the new subsytem
     private static CommandSwerveDrivetrain m_drive;
 
-    //Configures new subsytem
+    // Configures new subsytem
     public Pathfinder(CommandSwerveDrivetrain m_drive) {
         this.m_drive = m_drive;
 
-        // Bring in the auto configure to allow autos to runn
+        // Bring in the auto configure to allow autos to run
         m_drive.configureAutoBuilder();
     }
 
@@ -42,7 +42,6 @@ public class Pathfinder extends SubsystemBase {
         // Since we are using a holonomic drivetrain, the rotation component of this
         // pose
         // represents the goal holonomic rotation
-        
 
         // Since AutoBuilder is configured, we can use it to build pathfinding commands
         Command pathfindingCommand = AutoBuilder.pathfindToPose(
@@ -66,17 +65,18 @@ public class Pathfinder extends SubsystemBase {
 
     }
 
-    public static Command PathNotRecognized (String PathName){
-        return new RunCommand(() -> System.out.println("Could not find" + PathName));
+    public static Command PathNotRecognized(String PathName) {
+        return new RunCommand(() -> System.out.println("Could not find " + PathName));
     }
-public static boolean PathEnded = false;
 
-    public static Command PathEnded(){
-        return new RunCommand(() -> PathEnded=true);
+    public static boolean PathEnded = false;
+
+    public static Command PathEnded() {
+        return new RunCommand(() -> PathEnded = true);
     }
 
     @Override
-    public void periodic(){
+    public void periodic() {
         SmartDashboard.putBoolean("Pathend", PathEnded);
     }
 

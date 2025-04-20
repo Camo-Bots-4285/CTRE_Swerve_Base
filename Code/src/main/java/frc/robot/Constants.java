@@ -23,8 +23,7 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 
 import frc.robot.RobotContainer;
-
-
+import frc.robot.subsystems.SwerveBase.TunerConstants;
 
 import static edu.wpi.first.units.Units.*;
 
@@ -34,6 +33,7 @@ import com.ctre.phoenix6.hardware.*;
 import com.ctre.phoenix6.signals.*;
 import com.ctre.phoenix6.swerve.*;
 import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
+import com.ctre.phoenix6.swerve.SwerveModule.SteerRequestType;
 import com.ctre.phoenix6.swerve.SwerveModuleConstants.*;
 
 import edu.wpi.first.math.Matrix;
@@ -58,6 +58,40 @@ import edu.wpi.first.units.measure.*;
  public final class Constants {
 
     public static final class SwerveConstants {
+
+
+
+
+
+
+
+    public static double MaxSpeed = TunerConstants.kSpeedAt12Volts.in(MetersPerSecond); // kSpeedAt12Volts desired top speed
+    public static double MaxAngularRate = RotationsPerSecond.of(0.75).in(RadiansPerSecond); // 3/4 of a rotation per second max angular velocity
+                
+    /* Setting up bindings for necessary control of the swerve drive platform */
+    public final static SwerveRequest.FieldCentric Feild_Centric_Driving = new SwerveRequest.FieldCentric()
+    //  .withDeadband(MaxSpeed * 0.1).withRotationalDeadband(MaxAngularRate * 0.1) // Add a 10% deadband
+    .withDriveRequestType(DriveRequestType.OpenLoopVoltage); // Use open-loop control for drive motors
+    //.withSteerRequestType(SteerRequestType.MotionMagicExpo);
+ 
+     public final static SwerveRequest.RobotCentric Robot_Centric_Driving = new SwerveRequest.RobotCentric()
+     //.withDeadband(MaxSpeed * 0.2).withRotationalDeadband(MaxAngularRate * 0.1)
+     .withSteerRequestType(SteerRequestType.MotionMagicExpo);
+     
+     private final SwerveRequest.SwerveDriveBrake brake = new SwerveRequest.SwerveDriveBrake(); 
+     private final SwerveRequest.PointWheelsAt point = new SwerveRequest.PointWheelsAt();
+
+
+
+
+
+
+
+
+
+
+
+
     /* Drive Controls */
     public static final int translationAxis = 1;
     public static final int strafeAxis = 0;
@@ -89,212 +123,18 @@ import edu.wpi.first.units.measure.*;
      public static final double maxSpeed = 5.0;//In meter/Second  //Hypathetically 5.21208
      public static final double maxAngularVelocity = maxSpeed/robotRotationFactor; //meter/sec to radian/sec
      public static final double maxAcceleration = 3.5;//Hypethicaly 6.2// Motor_MAX_Tork/(robotMass*Math.pow(centerofGravity,2.0))
-     
-     
-    /*Motor Constaints */
-    public static final double Drive_Motor_MAX_RPS = maxSpeed*driveGearRatio/wheelCircumference;//RPM/60=RPS
-    public static final double Drive_Motor_MAX_Accleration = maxAcceleration*driveGearRatio/wheelCircumference;//RPM/60=RPS
-    public static final double Drive_Motor_MAX_Jerk =0;    
-
-    /*Encoder Id's + Pigeon */
-    public static final int frontLeftRotationEncoderId = 3;
-    public static final int frontRightRotationEncoderId = 2;
-    public static final int rearLeftRotationEncoderId = 4;
-    public static final int rearRightRotationEncoderId = 1;
-    
-    public static final int PIGEON_SENSOR_ID = 0;
-
-    /*Spark/Talon Id's */
-    public static final int frontLeftRotationMotorId = 21;
-    public static final int frontLeftDriveMotorId = 11;
-
-    public static final int frontRightRotationMotorId = 22;
-    public static final int frontRightDriveMotorId = 12;
-
-    public static final int rearLeftRotationMotorId = 23;
-    public static final int rearLeftDriveMotorId = 13;
-
-    public static final int rearRightRotationMotorId = 24;
-    public static final int rearRightDriveMotorId = 14;
-
-    /* Set Normal Pigeon of Set */
-    public static final int NormalPigeonOfSet = 0;
 
     /* TeleOp Swerve Constants *///Tune a little higher then what driver is confetable driving for Fast and normal
-    public static double kTeleDriveMaxSpeedMetersPerSecondFast = maxSpeed;//Try getting this value from Choreo
-    public static double kTeleDriveMaxSpeedMetersPerSecondNormal = 2.0; 
-    public static double kTeleDriveMaxSpeedMetersPerSecondSlow = 0.125;   
+    public static final double kTeleDriveMaxSpeedMetersPerSecondFast = maxSpeed;//Try getting this value from Choreo
+    public static final double kTeleDriveMaxSpeedMetersPerSecondNormal = 2.0; 
 
-    public static double kTeleDriveMaxSpeedMetersPerSecond = kTeleDriveMaxSpeedMetersPerSecondNormal;  
-    public static double kTeleDriveMaxAccelerationUnitsPerSecond = maxAcceleration;//Try getting this value from Pathplanner
+
+    public static final  double kTeleDriveMaxSpeedMetersPerSecond = kTeleDriveMaxSpeedMetersPerSecondNormal;  
+    public static final double kTeleDriveMaxAccelerationUnitsPerSecond = maxAcceleration;//Try getting this value from Pathplanner
     
     public static final double kTeleDriveMaxAngularSpeedRadiansPerSecond = kTeleDriveMaxSpeedMetersPerSecond/robotRotationFactor;//Try getting this value from Choreo
     public static final double kTeleDriveMaxAngularAccelerationUnitsPerSecond = maxAcceleration/robotRotationFactor;//Try getting this value from Choreo
 
-
-    /* Swerve Calibration
-    Now after all that set up we need to make sure the Swerve Base gets calibrated correctly. The following goes over how
-    to calibrate a bot who center of gravity is in the center of the robot
-
-    NOTE: If Robots Center is gravity is not center of the wheels
-    Thought technically weight should have nothing to do with the movement of a module, it can add friction. I have added a system 
-    to acount for this called Weight/SwerveDriveModule. If you find conventianl tuneing is not working as well as you hoped it would.
-    Uncomment everything that says "needed for Weight/SwerveDriveModule". Keep in mind this is all theoretical and has not been test 
-    as of (8/14/2024) so system might need a few changes like changes in signs to become fully functioning.
-
-    1) Edit(DrivePID1)/Make a button that uses the drive command at a set speed (perferably speed for auto) make sure calibrationFactorSB = 1.0
-    Lift robot up and tune PIDs for free spin (PIDs for Indivual Motors) PID is tuned when SmartDashBoard ## wheel Speed is withing fice decimal
-    places of the taget value
-
-    2) Choose multiple other speeds and record taget(x) vs actual-target(y) without changing PIDS use this data to create an equation to 
-    add to DriveController kP in swerve module
-
-    Equation formate:
-    Linear: Slope*(optimizedDesiredState.speedMetersPerSecond * SwerveConstants.maxSpeed - auto speed)
-    Quadratic: A(optimizedDesiredState.speedMetersPerSecond * SwerveConstants.maxSpeed - auto speed)*(optimizedDesiredState.speedMetersPerSecond * SwerveConstants.maxSpeed - auto speed) + B(optimizedDesiredState.speedMetersPerSecond * SwerveConstants.maxSpeed - auto speed)
-
-    3) When you are satisfied with the tracking place to robot on the ground and find the percent error and make the inverese equal to calibrationFactorSB 
-   
-    4) Now it is final time to start tuning auto!! Go to "Set PIDs for Path Planner" in Swerve Base.
-    
-    */
-
-    /*PIDs for set Voltage*/
-    // public static double frontLeft_Drive_kP = 0.3487;//0.3487//.38
-    // public static double frontLeft_Rotation_kP = 0.5;
-
-    // public static double frontRight_Drive_kP = 0.3464;//0.3464//.388
-    // public static double frontRight_Rotation_kP = 0.5;
-
-    // public static double rearLeft_Drive_kP = 0.3447;//0.3447//.38
-    // public static double rearLeft_Rotation_kP = 0.5;
-
-    // public static double rearRight_Drive_kP = 0.3473;//0.3473.3945
-    //  public static double rearRight_Rotation_kP = 0.5;
-
-    /**PIDs for Indivual Motors 
-     * 
-     * While tuning first start with FF you can use the following links to 
-     * help get a starting value try get get all variable as close as posible
-     * 
-     * Drive-https://www.reca.lc/drive
-     *  When you use this cite please copy and pasta link to your project below so there may see the values you used
-     *
-     * Rotation- https://docs.wpilib.org/en/stable/docs/software/advanced-controls/introduction/tuning-turret.html
-     * You can read thought the following website and try to implment a FF contollor but as long as the
-     * wheel turn quickly in the durection we want and stay there this is a little less import that does not mean
-     * do not tak your time and make sure it is right.
-     */
-    public static PIDController frontLeft_Drive_PID = new PIDController(0.0, 0.0, 0.003);//14.1207
-    public static PIDController frontRight_Drive_PID = new PIDController(0.0,0.0, 0.003);//14.1125
-    public static PIDController rearLeft_Drive_PID = new PIDController(0.0, 0.0, 0.003);//14.347
-    // Changed to test
-    public static PIDController rearRight_Drive_PID = new PIDController(0.0, 0.0, 0.003);
-    //public static PIDController rearRight_Drive_PID = new PIDController(.219, 0.0, 0.00085432);//14.18//1.5//1.7//0.5, 0.0,0.00195052
-   //0.00901141 to much
-   //0.0090114 good ish  -6.5 2.31, 0.0, 0.0090114
-   //0.0090112 to little
-   
-    //It seem that kp and kv should be the same value
-    //How ever kd has to offset the uncertenty of kp so the wheel does not occilate. 0.0, 0.0, 0.0
-
-    public static SimpleMotorFeedforward frontLeft_Drive_FF = new SimpleMotorFeedforward(0.145,0.12,0.0025);// 0.16,2.2925,0.0
-    public static SimpleMotorFeedforward frontRight_Drive_FF = new SimpleMotorFeedforward(0.145,0.11875,0.0025);// 0.16,2.27,0.0
-    public static SimpleMotorFeedforward rearLeft_Drive_FF = new SimpleMotorFeedforward(0.145,0.1185,0.0025);// 0.16,2.265,0.0
-    public static SimpleMotorFeedforward rearRight_Drive_FF = new SimpleMotorFeedforward(0.145,0.1185,0.0025);//0.155,2.26,0.0
-
-    public static PIDController frontLeft_Rotation_PID = new PIDController(5, 0.0, 0.0);
-    public static PIDController frontRight_Rotation_PID = new PIDController(5, 0, 0);
-    public static PIDController rearLeft_Rotation_PID = new PIDController(5, 0, 0);
-    public static PIDController rearRight_Rotation_PID = new PIDController(5, 0, 0);
-
-    public static SimpleMotorFeedforward frontLeft_Rotation_FF = new SimpleMotorFeedforward(0.0, 0.0, 0.0);
-    public static SimpleMotorFeedforward frontRight_Rotation_FF = new SimpleMotorFeedforward(0.0, 0.0, 0.0);
-    public static SimpleMotorFeedforward rearLeft_Rotation_FF = new SimpleMotorFeedforward(0.0, 0.0, 0.0);
-    public static SimpleMotorFeedforward rearRight_Rotation_FF = new SimpleMotorFeedforward(0.0, 0.0, 0.0);
-
-
-/*
- * Step-by-Step PID and FeedForward Tuning Plan for Robot Movement
- * 
- * 1. **Set Initial Values:**
- *    - Start with zero for all PID and FeedForward gains:
- *      - P = 0, I = 0, D = 0
- *      - FeedForward velocity = 0, FeedForward acceleration = 0
- *      - Static FeedForward (`ks`) = 0
- * 
- * 2. **Tune Static FeedForward (`ks`) for Low-Speed Movement:**
- *    - `ks` compensates for static friction and ensures the robot can overcome it and start moving.
- *    - Set `ks` to a small value (e.g., `ks = 0.01`), then gradually increase it if the robot hesitates or stalls at low speeds.
- *    - The goal is to get the robot to move smoothly at low speeds without stuttering or excessive torque.
- *    - Adjust `ks` until the robot starts moving from rest with smooth and controlled acceleration.
- * 
- * 3. **Tune FeedForward (Velocity and Acceleration):**
- *    - After static friction is overcome, tune the FeedForward velocity and acceleration gains.
- *    - Start by adjusting the FeedForward velocity term (e.g., from 0.1 to 0.2), testing the robot’s response to varying speeds.
- *    - Adjust FeedForward acceleration for smoother starts from a standstill.
- *    - The robot should accelerate and decelerate smoothly without oscillations or large delays.
- * 
- * 4. **Tune Proportional Gain (P):**
- *    - Set I = 0 and D = 0, and focus on tuning **P** first to control the robot’s responsiveness.
- *    - Start with a small P-gain (e.g., P = 0.1) and gradually increase it to eliminate sluggishness and improve speed accuracy.
- *    - Ensure there’s no overshoot or oscillation; if overshoot happens, reduce P.
- * 
- * 5. **Tune Integral Gain (I):**
- *    - After adjusting **P**, set D = 0 and tune **I** to minimize steady-state error (small persistent errors).
- *    - Start with a small value for **I** (e.g., I = 0.01) and increase it until any small drift is corrected.
- *    - Watch for wind-up (large I value), which could cause overshoot or instability.
- * 
- * 6. **Tune Derivative Gain (D):**
- *    - Set **I = 0** and focus on **D** to smooth out any overshoot or oscillations caused by **P**.
- *    - Gradually increase **D** to stabilize the motor response.
- *    - If the robot becomes sluggish or noisy, reduce **D** until smooth control is achieved.
- * 
- * 7. **Test on Ground and Adjust for Motor Interaction:**
- *    - After tuning off-ground, test the robot on the ground to account for real-world friction and weight distribution.
- *    - Fine-tune **FeedForward velocity** and **acceleration** as necessary for optimal on-ground performance.
- *    - If motors interfere with each other (e.g., one motor affects the other’s response), adjust the PID values to ensure balanced performance.
- * 
- * **To Make Tuning Values Work on the Ground:**
- *    - The **ground effect** changes motor behavior due to increased friction, weight distribution, and possible coupling between the wheels.
- *    - **Start with the off-ground tuned values** (such as `ks`, FeedForward, and PID gains) and test them on the ground.
- *    - **If the robot is too slow to start** or struggles to move, increase **`ks`** slightly to compensate for the additional friction of the ground.
- *    - **FeedForward adjustments** might also be necessary:
- *      - If the robot accelerates too slowly or drags, increase **FeedForward velocity** and **FeedForward acceleration**.
- *      - If the robot accelerates too quickly or jerks, slightly decrease the FeedForward values.
- *    - **PID gains** may also need slight adjustments:
- *      - If the robot oscillates or overshoots, reduce **P** or increase **D**.
- *      - If the robot drifts or struggles to hold a consistent speed, increase **I** to reduce steady-state error.
- *    - Keep an eye on **motor interaction**; if one motor is affecting the other (e.g., one motor is not reacting as expected due to ground friction or loading), adjust the PID parameters for each motor individually, if your system allows for that.
- *    - For **two-wheel drive robots** or other setups, sometimes adjusting the left and right motor PID terms separately is necessary to account for slight asymmetries in wheel friction or motor response.
- * 
- * 8. **Verify High-Speed Performance:**
- *    - After fine-tuning at low speeds, test the robot at higher speeds (e.g., 50%-100% of max speed).
- *    - Ensure the robot accelerates, decelerates, and holds a straight path without oscillations or excessive overshoot.
- * 
- * 9. **Repeat as Needed:**
- *    - Revisit any of the previous steps if issues arise in different conditions (e.g., varying surfaces or loads).
- * 
- * By following this approach, you start by tuning **static FeedForward (`ks`)** first, ensuring smooth low-speed movement before focusing on dynamic control with **PID** and **FeedForward** terms. The final tuning step of testing on the ground ensures that real-world factors such as friction, weight distribution, and motor interaction are accounted for.
- */
-
-
-
-
-    /* Calibration Factor to Help offest for weight start with this at one*/
-    public static double calibrationFactorSB = 1.0;//1.11
-
-
-    //The following should not be touch 
-    public static final SwerveDriveKinematics kinematics = new SwerveDriveKinematics(
-        new Translation2d(trackWidth / 2.0, wheelBase / 2.0), // front left, ++ quadrant
-        new Translation2d(trackWidth / 2.0, -wheelBase / 2.0), // front right, +- quadrant
-        new Translation2d(-trackWidth / 2.0, wheelBase / 2.0), // rear left, -+ quadrant
-        new Translation2d(-trackWidth / 2.0, -wheelBase / 2.0) // rear right, -- quadrant
-    );
-
-    public static Translation2d mDriveRadius = new Translation2d(trackWidth/2, wheelBase/ 2);
-    
   }
 
     public static final class VisionConstants {

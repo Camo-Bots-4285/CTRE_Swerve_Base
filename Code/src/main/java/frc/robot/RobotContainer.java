@@ -32,8 +32,9 @@
  import static edu.wpi.first.units.Units.*;
  
  import java.util.function.DoubleSupplier;
- 
- import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
+import java.util.function.Supplier;
+
+import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
  import com.ctre.phoenix6.swerve.SwerveModule.SteerRequestType;
  import com.ctre.phoenix6.swerve.SwerveRequest;
 import com.pathplanner.lib.auto.AutoBuilder;
@@ -47,207 +48,78 @@ import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.wpilibj.Joystick;
  import edu.wpi.first.wpilibj2.command.Command;
  import edu.wpi.first.wpilibj2.command.Commands;
+import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.RunCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
  import edu.wpi.first.wpilibj2.command.button.JoystickButton;
+ import edu.wpi.first.wpilibj2.command.button.Trigger;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
  import frc.robot.Constants.SwerveConstants;
  import frc.robot.commands.Swerve.TeleOpSwerve;
 import frc.robot.commands.Swerve.ToPath;
 import frc.robot.commands.Swerve.ToPose;
+import frc.robot.control.DriverInterface;
 import frc.robot.subsystems.SwerveBase.CommandSwerveDrivetrain;
  import frc.robot.subsystems.SwerveBase.Telemetry;
  import frc.robot.subsystems.SwerveBase.TunerConstants;
 import frc.robot.subsystems.Vision.AprilTagSubsystem;
 import frc.robot.util.SelfDriving.Pathfinder;
+import frc.robot.control.*;
 
+import frc.robot.Constants.SwerveConstants;
  
  public class RobotContainer {
-     public static double MaxSpeed = TunerConstants.kSpeedAt12Volts.in(MetersPerSecond); // kSpeedAt12Volts desired top speed
-          public static double MaxAngularRate = RotationsPerSecond.of(0.75).in(RadiansPerSecond); // 3/4 of a rotation per second max angular velocity
-                
-                    /* Setting up bindings for necessary control of the swerve drive platform */
-                    public final static SwerveRequest.FieldCentric Feild_Centric_Driving = new SwerveRequest.FieldCentric()
-                          //  .withDeadband(MaxSpeed * 0.1).withRotationalDeadband(MaxAngularRate * 0.1) // Add a 10% deadband
-             .withDriveRequestType(DriveRequestType.OpenLoopVoltage); // Use open-loop control for drive motors
-             //.withSteerRequestType(SteerRequestType.MotionMagicExpo);
- 
-     public final SwerveRequest.RobotCentric Robot_Centric_Driving = new SwerveRequest.RobotCentric()
-             //.withDeadband(MaxSpeed * 0.2).withRotationalDeadband(MaxAngularRate * 0.1)
-             .withSteerRequestType(SteerRequestType.MotionMagicExpo);
-     
-     private final SwerveRequest.SwerveDriveBrake brake = new SwerveRequest.SwerveDriveBrake(); 
-     private final SwerveRequest.PointWheelsAt point = new SwerveRequest.PointWheelsAt();
- 
-     private final Telemetry swerve_logger = new Telemetry(MaxSpeed);
- 
-     private final CommandXboxController joystick = new CommandXboxController(0);
- 
-     public final static CommandSwerveDrivetrain drivetrain = TunerConstants.createDrivetrain();
- 
+    /*Intalizes Controller interface */
+     public final static CommandXboxController xBoxJoystick = new CommandXboxController(0);
      public final static Joystick driverJoystick = new Joystick(0);
 
+    /*Import contorl system that can be used */
+     public static DriverInterface m_Driver  = new DriverInterface();
+     public static TunningInterface m_Tunning  = new TunningInterface();
+
+    /*Runs subsytems */
+     public final static CommandSwerveDrivetrain drivetrain = TunerConstants.createDrivetrain();
+     private final Telemetry swerve_logger = new Telemetry(SwerveConstants.MaxSpeed);
      public static Pathfinder m_pathFinder  = new Pathfinder(drivetrain);
      public static AprilTagSubsystem m_aprilTags  = new AprilTagSubsystem();
+
+     
 /*PID auto tune stuff-
  * 
  * Run one of the sysID command 
  * Open the log file using this guide-https://v6.docs.ctr-electronics.com/en/latest/docs/tuner/tools/log-extractor.html
  * 
  */
-        
+
+
      public RobotContainer() {
-         //Change this method to try diffent swerve contorl
-         //configureBindings_JoyStick_with_TeleOpSwerve();
+        //Runs the driver contol interface
+        m_Driver.DriverContainer();
 
-        //  JoystickButton btn_run_motor1 = new JoystickButton(driverJoystick, 3);
-        //  btn_run_motor1.whileTrue(drivetrain.sysIdQuasistatic(Direction.kForward));
-        // JoystickButton btn_run_motor1 = new JoystickButton(driverJoystick, 1);
-        //   btn_run_motor1.whileTrue(new ToPath("Example Path"));
+        //Runs the log for the swerve base
+        drivetrain.registerTelemetry(swerve_logger::telemeterize);
 
-          JoystickButton btn_run_motor1 = new JoystickButton(driverJoystick, 7);
-          btn_run_motor1.whileTrue(drivetrain.runOnce(() -> drivetrain.seedFieldCentric()));
+        //Runs the command to be used in auto
+        AutoCommands();
 
 
          
-        //  JoystickButton btn_run_motor2 = new JoystickButton(driverJoystick, 4);
-        //  btn_run_motor2.whileTrue(drivetrain.sysIdQuasistatic(Direction.kReverse));
-            
-        //  JoystickButton btn_run_motor3 = new JoystickButton(driverJoystick, 5);
-        //  btn_run_motor3.whileTrue(drivetrain.sysIdDynamic(Direction.kForward));
+         //Change this method to try diffent swerve contorl
+         //configureBindings_JoyStick_with_TeleOpSwerve();
 
-        //  JoystickButton btn_run_motor4 = new JoystickButton(driverJoystick, 6);
-        //  btn_run_motor4.whileTrue(drivetrain.sysIdDynamic(Direction.kReverse));
-            
-            
 
- 
-         drivetrain.registerTelemetry(swerve_logger::telemeterize);
+        // JoystickButton btn_run_motor1 = new JoystickButton(driverJoystick, 1);
+        //   btn_run_motor1.whileTrue(new ToPath("Example Path"));
 
-                       //Stops the robot from reciving any rotation command
-       DoubleSupplier stopRotation;stopRotation = () -> driverJoystick.getRawButton(9) ? 0.0 : 1.0;
-       //New driver interface without clamp and new lever ramp range from 20%-100% commanded max speed
        
-       new TeleOpSwerve(   
-       () -> (driverJoystick.getRawAxis(SwerveConstants.translationAxis)),
-       () -> (driverJoystick.getRawAxis(SwerveConstants.strafeAxis)),
-       () -> -(driverJoystick.getRawAxis(SwerveConstants.rotationAxis)* stopRotation.getAsDouble()),
-       () -> (-(driverJoystick.getRawAxis(SwerveConstants.sliderAxis)-1)/2.5+0.2),
-       () -> !driverJoystick.getRawButton(1)// inverted=fieldCentric, non-inverted=RobotCentric
-        );
-
-        JoystickButton btn_run_motor = new JoystickButton(driverJoystick, 1);
-
-
-
-        drivetrain.setDefaultCommand(
-            // Drivetrain will execute this command periodically
-            drivetrain.applyRequest(() ->
-            Feild_Centric_Driving.withVelocityX(-TeleOpSwerve.getControl()[0] * (MaxSpeed)) // Drive forward with negative Y (forward)
-                    .withVelocityY(-TeleOpSwerve.getControl()[1]* (MaxSpeed)) // Drive left with negative X (left)
-                    .withRotationalRate(TeleOpSwerve.getControl()[2] * (MaxAngularRate)) // Drive counterclockwise with negative X (left)
-            )
-        );
-
-    // drivetrain.setDefaultCommand(
-    //     // Drivetrain will execute this command periodically
-    //     drivetrain.applyRequest(() ->
-    //     Robot_Centric_Driving.withVelocityX(-TeleOpSwerve.getControl()[0] * (MaxSpeed)) // Drive forward with negative Y (forward)
-    //             .withVelocityY(-TeleOpSwerve.getControl()[1]* (MaxSpeed)) // Drive left with negative X (left)
-    //             .withRotationalRate(TeleOpSwerve.getControl()[2] * (MaxAngularRate)) // Drive counterclockwise with negative X (left)
-    //     )
-    // );
-
-        // drivetrain.applyRequest(() ->
-        //      Feild_Centric_Driving.withVelocityX(-TeleOpSwerve.getControl()[0] * (MaxSpeed)) // Drive forward with negative Y (forward)
-        //              .withVelocityY(-TeleOpSwerve.getControl()[1]* (MaxSpeed)) // Drive left with negative X (left)
-        //              .withRotationalRate(TeleOpSwerve.getControl()[2] * (MaxAngularRate)) // Drive counterclockwise with negative X (left)
-        //      )
-     
-        
+     }
+ 
+     public void AutoCommands(){
         NamedCommands.registerCommand("PathEnd", new RunCommand(()-> Pathfinder.PathEnded = true));
-
      }
- 
-     private void configureBindings_XBox() {
-         // Note that X is defined as forward according to WPILib convention,
-         // and Y is defined as to the left according to WPILib convention.
-         drivetrain.setDefaultCommand(
-             // Drivetrain will execute this command periodically
-             drivetrain.applyRequest(() ->
-             Feild_Centric_Driving.withVelocityX(joystick.getLeftY() * (MaxSpeed)) // Drive forward with negative Y (forward)
-                     .withVelocityY(joystick.getLeftX() * (MaxSpeed)) // Drive left with negative X (left)
-                     .withRotationalRate(joystick.getRightX() * (MaxAngularRate)) // Drive counterclockwise with negative X (left)
-             )
-         );
- 
-         joystick.a().whileTrue(drivetrain.applyRequest(() -> brake));
-         joystick.b().whileTrue(drivetrain.applyRequest(() ->
-             point.withModuleDirection(new Rotation2d(-joystick.getLeftY(), -joystick.getLeftX()))
-         ));
- 
-         // Run SysId routines when holding back/start and X/Y.
-         // Note that each routine should be run exactly once in a single log.
-         joystick.back().and(joystick.y()).whileTrue(drivetrain.sysIdDynamic(Direction.kForward));
-         joystick.back().and(joystick.x()).whileTrue(drivetrain.sysIdDynamic(Direction.kReverse));
-         joystick.start().and(joystick.y()).whileTrue(drivetrain.sysIdQuasistatic(Direction.kForward));
-         joystick.start().and(joystick.x()).whileTrue(drivetrain.sysIdQuasistatic(Direction.kReverse));
- 
-         // reset the field-centric heading on left bumper press
-         joystick.leftBumper().onTrue(drivetrain.runOnce(() -> drivetrain.seedFieldCentric()));
- 
-         drivetrain.registerTelemetry(swerve_logger::telemeterize);
-     }
- 
- 
-     private void configureBindings_JoyStick_with_CTRE() {
-         // Note that X is defined as forward according to WPILib convention,
-         // and Y is defined as to the left according to WPILib convention.
-         drivetrain.setDefaultCommand(
-             // Drivetrain will execute this command periodically
-             drivetrain.applyRequest(() ->
-             Feild_Centric_Driving.withVelocityX(driverJoystick.getRawAxis(1) * (MaxSpeed/4)) // Drive forward with negative Y (forward)
-                     .withVelocityY(driverJoystick.getRawAxis(0) * (MaxSpeed/4)) // Drive left with negative X (left)
-                     .withRotationalRate(driverJoystick.getRawAxis(2) * (MaxAngularRate/4)) // Drive counterclockwise with negative X (left)
-             )
-         );
-     }
- 
-     private void configureBindings_JoyStick_with_TeleOpSwerve() {
-              //Stops the robot from reciving any rotation command
-       DoubleSupplier stopRotation;stopRotation = () -> driverJoystick.getRawButton(9) ? 0.0 : 1.0;
-       //New driver interface without clamp and new lever ramp range from 20%-100% commanded max speed
-       
-       new TeleOpSwerve(   
-       () -> (driverJoystick.getRawAxis(SwerveConstants.translationAxis)),
-       () -> (driverJoystick.getRawAxis(SwerveConstants.strafeAxis)),
-       () -> -(driverJoystick.getRawAxis(SwerveConstants.rotationAxis)* stopRotation.getAsDouble()),
-       () -> (-(driverJoystick.getRawAxis(SwerveConstants.sliderAxis)-1)/2.5+0.2),
-       () -> !driverJoystick.getRawButton(1)// inverted=fieldCentric, non-inverted=RobotCentric
-        );
-
-        drivetrain.setDefaultCommand(
-            // Drivetrain will execute this command periodically
-            drivetrain.applyRequest(() ->
-            Feild_Centric_Driving.withVelocityX(TeleOpSwerve.getControl()[0] * (MaxSpeed/4)) // Drive forward with negative Y (forward)
-                    .withVelocityY(TeleOpSwerve.getControl()[1]* (MaxSpeed/4)) // Drive left with negative X (left)
-                    .withRotationalRate(TeleOpSwerve.getControl()[2] * (MaxAngularRate/4)) // Drive counterclockwise with negative X (left)
-            )
-        );       
-     }
-
  
      public Command getAutonomousCommand() {
              return AutoBuilder.buildAuto("New Auto");
      }
-
-
-     public static Command runRobot(){
-       return drivetrain.applyRequest(() ->
-        Feild_Centric_Driving.withVelocityX(-TeleOpSwerve.getControl()[0] * (MaxSpeed)) // Drive forward with negative Y (forward)
-                .withVelocityY(-TeleOpSwerve.getControl()[1]* (MaxSpeed)) // Drive left with negative X (left)
-                .withRotationalRate(TeleOpSwerve.getControl()[2] * (MaxAngularRate)) // Drive counterclockwise with negative X (left)
-        );
-     }
- }
+}

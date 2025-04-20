@@ -11,6 +11,7 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.subsystems.SwerveBase.CommandSwerveDrivetrain;
 import frc.robot.subsystems.SwerveBase.TunerConstants;
+import frc.robot.util.SelfDriving.DriverLock;
 import frc.robot.RobotContainer;
 import frc.robot.Constants.SwerveConstants;
 
@@ -57,8 +58,8 @@ public class TeleOpSwerve {
       DoubleSupplier fwdX,
       DoubleSupplier fwdY,
       DoubleSupplier rot,
-      DoubleSupplier AdjustDriveSpeed,
-      Supplier<Boolean> isFieldOriented) {
+      DoubleSupplier AdjustDriveSpeed
+      ) {
 
     forwardX = fwdX;
     forwardY = fwdY;
@@ -96,9 +97,20 @@ public class TeleOpSwerve {
     // There should be three setting that are programed in normal and other two are
     // activated by buttons
     // superfast and superslow(should be pared with high amps if push needed)
-    fwdX = xLimiter.calculate(fwdX * SwerveConstants.kTeleDriveMaxSpeedMetersPerSecond * AdjustDriveSpeed)/(SwerveConstants.kTeleDriveMaxSpeedMetersPerSecond);
-    fwdY = yLimiter.calculate(fwdY * SwerveConstants.kTeleDriveMaxSpeedMetersPerSecond * AdjustDriveSpeed)/(SwerveConstants.kTeleDriveMaxSpeedMetersPerSecond);
-    rot = turningLimiter.calculate(rot * SwerveConstants.kTeleDriveMaxAngularSpeedRadiansPerSecond * AdjustDriveSpeed)/(SwerveConstants.kTeleDriveMaxAngularSpeedRadiansPerSecond);
+    fwdX = xLimiter.calculate(fwdX *SwerveConstants.MaxSpeed * AdjustDriveSpeed);
+    fwdY = yLimiter.calculate(fwdY *SwerveConstants.MaxSpeed * AdjustDriveSpeed);
+    rot = turningLimiter.calculate(rot * SwerveConstants.MaxAngularRate * AdjustDriveSpeed);
+
+    //4. Uses the driverlock util file to replace driver contorl with inputs
+    if(DriverLock.AssumeControlX == true){
+      fwdX=DriverLock.XSpeedFinal;
+    }
+    if(DriverLock.AssumeControlY == true){
+      fwdY=DriverLock.YSpeedFinal;
+    }
+    if(DriverLock.AssumeControlRotation == true){
+      rot=DriverLock.RotationSpeedFinal;
+    }
 
     double[] States = {fwdX,fwdY,rot};
 
